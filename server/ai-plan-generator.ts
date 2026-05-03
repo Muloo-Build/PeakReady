@@ -64,17 +64,19 @@ STRICT RULES:
 - Session durations: approximately ${minutesPerSession} minutes (vary ±20 for rest/long days)
 - Periodization: weeks 1-${Math.floor(totalWeeks * 0.5)} base, weeks ${Math.floor(totalWeeks * 0.5) + 1}-${Math.floor(totalWeeks * 0.85)} build, final weeks taper
 - Strength exercises ONLY from: ${exerciseExamples}
-- "details" must be plain text, no markdown, max 3 sentences: warmup → main set → cooldown
+- "details" must use the structured markdown format specified below
 
 Return a JSON array of exactly ${totalWeeks * req.daysPerWeek} objects. Each object:
 {
   "weekNumber": <integer 1-${totalWeeks}>,
   "day": <one of: ${days.map((d) => `"${d}"`).join(", ")}>,
   "type": <"Ride" | "Long Ride" | "Strength" | "Rest">,
-  "description": <short title string>,
+  "description": <short title string, e.g. "Zone 2 Base Ride">,
   "minutes": <integer>,
   "zone": <"Zone 1" | "Zone 2" | "Zone 3" | "Zone 4" | "Zone 5" | "N/A">,
-  "details": <plain text instructions>
+  "details": <markdown string with this exact structure — use \\n for newlines:
+    ### Warm-Up\\n[5-10 min activity with specific instructions]\\n\\n### Main Set\\n[Core workout: for rides include zone, cadence, effort cues; for strength include sets × reps, rest, form tip per exercise]\\n\\n### Cool-Down\\n[3-5 min easy with stretch suggestions]\\n\\n### Key Focus\\n[1-2 coaching cues specific to this session and the training phase]
+  >
 }`;
 }
 

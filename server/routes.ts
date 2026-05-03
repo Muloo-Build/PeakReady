@@ -6,6 +6,7 @@ import { insertMetricSchema, insertServiceItemSchema, insertGoalEventSchema } fr
 import { getWorkoutDetails } from "./workout-library";
 import { syncStravaActivities, isStravaConfigured, getStravaAuthUrl, exchangeCodeForToken } from "./strava";
 import { generateAIPlan, type PlanRequest } from "./ai-plan-generator";
+import { getCoachReply, buildGreeting, type ChatMessage } from "./coach";
 import { isAuthenticated } from "./replit_integrations/auth";
 
 const sessionUpdateSchema = z.object({
@@ -323,6 +324,59 @@ export async function registerRoutes(
         sessionsPerWeek: "3-4",
       },
     ]);
+  });
+
+  const coachMessageSchema = z.object({
+    messages: z.array(z.object({
+      role: z.enum(["user", "assistant"]),
+      content: z.string().min(1).max(5000),
+    })).min(1).max(60),
+  });
+
+  app.get("/api/coach/greeting", async (_req, res) => {
+    try {
+      const [sessions, metrics, goal, activeWeekSetting, stravaActivities] = await Promise.all([
+        storage.getSessions(),
+        storage.getMetrics(),
+        storage.getGoal(),
+        storage.getSetting("activeWeek"),
+        storage.getStravaActivities(),
+      ]);
+      const activeWeek = activeWeekSetting ? parseInt(activeWeekSetting, 10) : 1;
+      const greeting = buildGreeting({ goal, sessions, metrics, stravaActivities, activeWeek });
+      res.json({ greeting });
+    } catch (err: any) {
+      console.error("Coach greeting error:", err.message);
+      res.status(500).json({ error: "Failed to load greeting" });
+    }
+  });
+
+  app.post("/api/coach/chat", async (req, res) => {
+    try {
+      const parsed = coachMessageSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid message format" });
+      }
+      const [sessions, metrics, goal, activeWeekSetting, stravaActivities] = await Promise.all([
+        storage.getSessions(),
+        storage.getMetrics(),
+        storage.getGoal(),
+        storage.getSetting("activeWeek"),
+        storage.getStravaActivities(),
+      ]);
+      const activeWeek = activeWeekSetting ? parseInt(activeWeekSetting, 10) : 1;
+      const reply = await getCoachReply(parsed.data.messages as ChatMessage[], {
+        goal,
+        sessions,
+        metrics,
+        stravaActivities,
+        activeWeek,
+      });
+      res.json({ reply });
+    } catch (err: any) {
+      console.error("Coach chat error:", err.message);
+      res.status(500).json({ error: err.message || "Failed to get coach response" });
+    }
   });
 
   return httpServer;

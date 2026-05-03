@@ -1,6 +1,6 @@
 # Overview
 
-This is a **cycling/fitness training tracker** application ("PeakReady") built as a full-stack TypeScript project. It helps users follow a structured training plan leading up to a goal event (like a cycling race or mountain ride). The app tracks weekly training sessions, body metrics (weight, resting HR, fatigue), bike service/maintenance items, goal event countdown, and **Strava ride data**. It features a dark space-themed dashboard with glassmorphism panels, neon gradients, and a mobile-friendly tab-based navigation.
+This is a **cycling/fitness training tracker** application ("PeakReady") built as a full-stack TypeScript project. It helps users follow a structured training plan leading up to a goal event (like a cycling race or mountain ride). The app tracks weekly training sessions, body metrics (weight, resting HR, fatigue), bike service/maintenance items, goal event countdown, and **Strava ride data**. It features a dark space-themed dashboard with glassmorphism panels, neon gradients, and a mobile-friendly tab-based navigation. Includes a conversational **AI Coach** ("Peak") and AI-powered plan generation via Google Gemini.
 
 # User Preferences
 

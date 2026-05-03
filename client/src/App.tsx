@@ -17,6 +17,7 @@ import { Metrics } from "@/pages/metrics";
 import { ServiceTracker } from "@/pages/service-tracker";
 import { EventTracker } from "@/pages/event-tracker";
 import { LoginPage } from "@/pages/login";
+import { AiCoachChat } from "@/components/ai-coach-chat";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import type { Session, Metric, ServiceItem, GoalEvent } from "@shared/schema";
@@ -164,6 +165,13 @@ function MainApp() {
           <EventTracker goal={goal || undefined} />
         )}
       </main>
+
+      <AiCoachChat
+        sessions={sessions}
+        metrics={metrics}
+        goal={goal || undefined}
+        activeWeek={activeWeek}
+      />
 
       <nav className="fixed bottom-0 w-full glass-panel rounded-none border-x-0 border-b-0 px-4 py-3 flex justify-between items-center z-30 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.5)]">
         <NavItem
