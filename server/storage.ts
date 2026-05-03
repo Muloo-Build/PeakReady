@@ -77,8 +77,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertManySessions(sessionList: InsertSession[]): Promise<void> {
-    for (const session of sessionList) {
-      await this.upsertSession(session);
+    if (sessionList.length === 0) return;
+    const CHUNK = 50;
+    for (let i = 0; i < sessionList.length; i += CHUNK) {
+      const chunk = sessionList.slice(i, i + CHUNK);
+      await db.insert(sessions).values(chunk).onConflictDoNothing();
     }
   }
 

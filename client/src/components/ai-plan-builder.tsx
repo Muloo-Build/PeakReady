@@ -69,33 +69,52 @@ export function AIPlanBuilder({ onClose, goal }: Props) {
     }
 
     setIsGenerating(true);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 90_000);
+
     try {
-      const res = await apiRequest("POST", "/api/plan/generate-ai", {
-        eventName,
-        eventDate,
-        eventDistance: eventDistance ? Number(eventDistance) : undefined,
-        eventElevation: eventElevation ? Number(eventElevation) : undefined,
-        fitnessLevel,
-        goals: selectedGoals,
-        currentWeight: currentWeight ? Number(currentWeight) : undefined,
-        targetWeight: targetWeight ? Number(targetWeight) : undefined,
-        daysPerWeek,
-        hoursPerWeek,
-        equipment,
-        injuries: injuries || undefined,
-        additionalNotes: additionalNotes || undefined,
+      const res = await fetch("/api/plan/generate-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        signal: controller.signal,
+        body: JSON.stringify({
+          eventName,
+          eventDate,
+          eventDistance: eventDistance ? Number(eventDistance) : undefined,
+          eventElevation: eventElevation ? Number(eventElevation) : undefined,
+          fitnessLevel,
+          goals: selectedGoals,
+          currentWeight: currentWeight ? Number(currentWeight) : undefined,
+          targetWeight: targetWeight ? Number(targetWeight) : undefined,
+          daysPerWeek,
+          hoursPerWeek,
+          equipment,
+          injuries: injuries || undefined,
+          additionalNotes: additionalNotes || undefined,
+        }),
       });
+
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || data.message || "Generation failed. Please try again.");
+      }
+
       queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
       toast({ title: `AI generated ${data.count} training sessions!` });
       onClose();
     } catch (err: any) {
+      const isTimeout = err.name === "AbortError";
       toast({
-        title: "Plan generation failed",
-        description: err.message || "Please try again",
+        title: isTimeout ? "Request timed out" : "Plan generation failed",
+        description: isTimeout
+          ? "The AI took too long to respond. Please try again."
+          : err.message || "Please try again.",
         variant: "destructive",
       });
     } finally {
+      clearTimeout(timeout);
       setIsGenerating(false);
     }
   };
@@ -426,7 +445,7 @@ export function AIPlanBuilder({ onClose, goal }: Props) {
                 {isGenerating ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    Building Your Plan...
+                    Generating — up to 30s...
                   </>
                 ) : (
                   <>
@@ -439,7 +458,7 @@ export function AIPlanBuilder({ onClose, goal }: Props) {
           </div>
           {step === 3 && (
             <p className="text-[9px] text-brand-muted text-center mt-2 leading-relaxed">
-              This will replace your current training plan. AI uses Google Gemini via Replit — charges are minimal and billed to your credits.
+              This will replace your current training plan. Powered by Google Gemini.
             </p>
           )}
         </div>
